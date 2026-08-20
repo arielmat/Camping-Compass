@@ -14,20 +14,32 @@ const read = (p) => readFile(ROOT + p, 'utf8');
 const css = await read('css/styles.css');
 let solar = await read('js/solar.js');
 let cities = await read('js/cities.js');
+let weather = await read('js/weather.js');
 let app = await read('js/app.js');
 const svg = await read('icons/icon.svg');
 
 // Merge the ES modules into one module scope: drop the cross-file imports,
 // and turn `export function`/`export const` into plain declarations.
-solar = solar.replace(/export function/g, 'function');
-cities = cities.replace(/export function/g, 'function').replace(/export const/g, 'const');
+const stripExports = (s) =>
+  s.replace(/export function/g, 'function').replace(/export const/g, 'const');
+solar = stripExports(solar);
+cities = stripExports(cities);
+weather = stripExports(weather);
 app = app
   // Strip any `import { ... } from './*.js';` line.
   .replace(/^import\s+\{[^}]*\}\s+from\s+'\.\/[^']+';\s*$/gm, '')
   // The service worker can't register from file://; drop that block.
   .replace(/\/\/ Register the service worker[\s\S]*?\}\s*\n/, '');
 
-const script = `${cities}\n\n/* ---- solar ---- */\n${solar}\n\n/* ---- app ---- */\n${app}`;
+const script = [
+  cities,
+  '/* ---- solar ---- */',
+  solar,
+  '/* ---- weather ---- */',
+  weather,
+  '/* ---- app ---- */',
+  app,
+].join('\n\n');
 const favicon = 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
 
 const html = `<!DOCTYPE html>
@@ -85,15 +97,13 @@ ${css}
     <section class="readouts">
       <div class="readout">
         <div class="readout-value" id="riseTime">--:--</div>
-        <div class="readout-key">sunrise</div>
+        <div class="readout-key" id="riseDayKey">sunrise</div>
       </div>
       <div class="readout">
-        <div class="readout-value" id="riseDir">--</div>
-        <div class="readout-key" id="riseBearing">-- bearing</div>
-      </div>
-      <div class="readout">
-        <div class="readout-value" id="countdown">--:--</div>
-        <div class="readout-key">until sunrise</div>
+        <div class="readout-value weather-value">
+          <span id="wxIcon">🌡️</span><span id="wxTemp">–</span>
+        </div>
+        <div class="readout-key" id="wxLabel">at sunrise</div>
       </div>
     </section>
 
