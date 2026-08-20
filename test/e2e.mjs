@@ -93,42 +93,66 @@ try {
     getComputedStyle(document.getElementById('sunMarker')).getPropertyValue('--rise'));
   check('sun marker has a bearing set', /\d/.test(riseVar), riseVar.trim());
 
-  // 3. Simulate the compass turning and confirm the dial rotates + heading shows.
-  await page.evaluate(() => {
-    // Android-style absolute orientation: alpha counter-clockwise from north.
-    const ev = new Event('deviceorientationabsolute');
-    Object.defineProperties(ev, {
-      alpha: { value: 300 }, beta: { value: 0 }, gamma: { value: 0 },
-      absolute: { value: true },
-    });
-    window.dispatchEvent(ev);
-    // Some browsers only wire the plain event:
-    const ev2 = new Event('deviceorientation');
-    Object.defineProperties(ev2, {
-      alpha: { value: 300 }, beta: { value: 0 }, gamma: { value: 0 },
-      absolute: { value: true },
-    });
-    window.dispatchEvent(ev2);
-  });
-  await page.waitForTimeout(200);
+  // Helper: dispatch an Android-style absolute-orientation event (alpha is
+  // counter-clockwise from north).
+  const sendHeading = (alpha) =>
+    page.evaluate((a) => {
+      for (const name of ['deviceorientationabsolute', 'deviceorientation']) {
+        const ev = new Event(name);
+        Object.defineProperties(ev, {
+          alpha: { value: a }, beta: { value: 0 }, gamma: { value: 0 },
+          absolute: { value: true },
+        });
+        window.dispatchEvent(ev);
+      }
+    }, alpha);
 
-  const heading = await page.textContent('#hubHeading');
-  // alpha 300 → heading (360-300)=60°
-  check('heading updates from compass event', /60°/.test(heading), heading);
+  // 3. Simulate the compass turning and confirm the dial rotates.
+  await sendHeading(300); // → heading 60°
+  await page.waitForTimeout(120);
 
   const dialT = await page.evaluate(() =>
     getComputedStyle(document.getElementById('dial')).transform);
   check('dial applies a rotation matrix', dialT !== 'none' && dialT.startsWith('matrix'), dialT);
+
+  const hubDir = (await page.textContent('#hubDir')).trim();
+  check('hub shows sunrise cardinal (not a jumpy degree readout)', /^[NESW]{1,3}$/.test(hubDir), hubDir);
+
+  // 3b. Jump-free wraparound: sweep heading across the 360→0 seam and assert
+  // the accumulated dial rotation only ever moves in small steps.
+  const rotOf = () => page.evaluate(() => window.__campingSunrise.state.rot);
+  await sendHeading(10); await page.waitForTimeout(60);
+  let prev = await rotOf();
+  let maxStep = 0;
+  for (const a of [5, 0, 355, 350, 345, 350, 355, 0, 5, 10]) {
+    await sendHeading(a);
+    await page.waitForTimeout(50);
+    const now = await rotOf();
+    maxStep = Math.max(maxStep, Math.abs(now - prev));
+    prev = now;
+  }
+  // Each 5° step should move the dial only a few degrees — never a ~360 snap.
+  check('dial never jumps across the 0°/360° seam', maxStep < 20, `max step ${maxStep.toFixed(1)}°`);
 
   // 4. Southern hemisphere sanity: Sydney in local winter rises north-of-east.
   await page.evaluate(() => window.__campingSunrise.setLocation(-33.8688, 151.2093, 'Sydney'));
   const sydDir = (await page.textContent('#riseDir')).trim();
   check('Sydney direction renders', /^[NESW]{1,3}$/.test(sydDir), sydDir);
 
-  // 5. No uncaught runtime errors throughout.
+  // 5. City fallback: resolve a city by name and apply it.
+  await page.evaluate(() => { document.getElementById('manual').open = true; });
+  await page.fill('#cityIn', 'Reykjavík');
+  await page.click('#applyCity');
+  await page.waitForTimeout(60);
+  const cityPlace = (await page.textContent('#place')).trim();
+  check('city picker resolves and sets location', /Reykjav/i.test(cityPlace), cityPlace);
+  const cityDatalist = await page.evaluate(() => document.querySelectorAll('#cityList option').length);
+  check('city autocomplete list is populated', cityDatalist > 100, `${cityDatalist} options`);
+
+  // 6. No uncaught runtime errors throughout.
   check('no page/runtime errors', pageErrors.length === 0, pageErrors.join(' | ') || 'clean');
 
-  // 6. Manual-entry validation path.
+  // 7. Recompute path when the location changes again.
   await page.evaluate(() => window.__campingSunrise.setLocation(51.5074, -0.1278, 'London'));
   const londonTime = (await page.textContent('#riseTime')).trim();
   check('London recompute works', /^\d{1,2}:\d{2}/.test(londonTime), londonTime);

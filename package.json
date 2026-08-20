@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "start": "node server.mjs",
-    "test": "node --test",
+    "test": "node --test test/solar.test.mjs",
     "test:e2e": "node test/e2e.mjs",
-    "test:all": "node --test && node test/e2e.mjs"
+    "test:all": "node --test test/solar.test.mjs && node test/e2e.mjs"
   },
   "keywords": ["sunrise", "compass", "camping", "pwa", "astronomy"],
   "license": "MIT",

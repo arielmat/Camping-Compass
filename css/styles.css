@@ -229,6 +229,7 @@ body {
   color: var(--ink); font-size: 0.95rem;
 }
 .manual-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.manual-city input { width: 190px; }
 
 .footnote { text-align: center; color: var(--ink-faint); font-size: 0.72rem; margin-top: auto; padding-top: 8px; }
 .footnote.error { color: #ff9b8a; }
