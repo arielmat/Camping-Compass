@@ -84,7 +84,7 @@
 
     <!-- Manual location fallback -->
     <details class="manual" id="manual">
-      <summary>No GPS? Pick a city or enter coordinates</summary>
+      <summary>No GPS? Enter a city</summary>
       <div class="manual-row manual-city">
         <label>City
           <input id="cityIn" list="cityList" placeholder="e.g. Paris" autocomplete="off" autocapitalize="words" />
@@ -92,12 +92,6 @@
         <button class="btn btn-sm" id="applyCity">Use city</button>
       </div>
       <datalist id="cityList"></datalist>
-      <div class="manual-or">or exact coordinates</div>
-      <div class="manual-row">
-        <label>Lat <input id="latIn" type="number" step="0.0001" placeholder="40.7128" inputmode="decimal" /></label>
-        <label>Lon <input id="lonIn" type="number" step="0.0001" placeholder="-74.0060" inputmode="decimal" /></label>
-        <button class="btn btn-sm" id="applyManual">Use</button>
-      </div>
     </details>
 
     <footer class="footnote" id="footnote">

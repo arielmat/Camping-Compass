@@ -29,9 +29,6 @@ const els = {
   gateNote: $('gateNote'),
   footnote: $('footnote'),
   manual: $('manual'),
-  latIn: $('latIn'),
-  lonIn: $('lonIn'),
-  applyManual: $('applyManual'),
   cityIn: $('cityIn'),
   cityList: $('cityList'),
   applyCity: $('applyCity'),
@@ -205,7 +202,7 @@ function setLocation(lat, lon, label) {
 
 function requestGeolocation() {
   if (!('geolocation' in navigator)) {
-    toast('Geolocation unavailable — set your location manually below.');
+    toast('Geolocation unavailable — enter a city below.');
     els.manual.open = true;
     return;
   }
@@ -225,8 +222,8 @@ function requestGeolocation() {
       els.manual.open = true;
       toast(
         err.code === err.PERMISSION_DENIED
-          ? 'Location permission denied — enter it manually below.'
-          : 'Could not get location — enter it manually below.'
+          ? 'Location permission denied — enter a city below.'
+          : 'Could not get location — enter a city below.'
       );
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -329,7 +326,7 @@ function maybeHideGate() {
 function applyCity() {
   const city = findCity(els.cityIn.value);
   if (!city) {
-    toast('City not found — try another, or enter lat/lon below.');
+    toast('City not found — try a nearby major city.');
     return;
   }
   setLocation(city.lat, city.lon, `📍 ${city.n}, ${city.c}`);
@@ -350,19 +347,6 @@ if (els.applyCity) {
     if (findCity(els.cityIn.value)) applyCity();
   });
 }
-
-els.applyManual.addEventListener('click', () => {
-  const lat = parseFloat(els.latIn.value);
-  const lon = parseFloat(els.lonIn.value);
-  if (Number.isNaN(lat) || Number.isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-    toast('Enter a valid latitude (−90…90) and longitude (−180…180).');
-    return;
-  }
-  setLocation(lat, lon, `📍 manual · ${lat.toFixed(3)}, ${lon.toFixed(3)}`);
-  // If the compass never started (e.g. desktop), try it now.
-  if (!state.headingReady) startCompass();
-  toast('Location set.');
-});
 
 // Keep countdown and heading feeling live.
 setInterval(updateCountdown, 1000 * 30);

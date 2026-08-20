@@ -245,10 +245,6 @@ body {
 }
 .manual-row input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
 .manual-city input { width: 190px; }
-.manual-or {
-  text-align: center; color: var(--ink-faint); font-size: 0.72rem;
-  text-transform: uppercase; letter-spacing: 1px; margin: 12px 0 2px;
-}
 
 .footnote { text-align: center; color: var(--ink-faint); font-size: 0.72rem; margin-top: auto; padding-top: 8px; }
 .footnote.error { color: #ff9b8a; }
@@ -331,7 +327,7 @@ body {
     </div>
 
     <details class="manual" id="manual">
-      <summary>No GPS? Pick a city or enter coordinates</summary>
+      <summary>No GPS? Enter a city</summary>
       <div class="manual-row manual-city">
         <label>City
           <input id="cityIn" list="cityList" placeholder="e.g. Paris" autocomplete="off" autocapitalize="words" />
@@ -339,12 +335,6 @@ body {
         <button class="btn btn-sm" id="applyCity">Use city</button>
       </div>
       <datalist id="cityList"></datalist>
-      <div class="manual-or">or exact coordinates</div>
-      <div class="manual-row">
-        <label>Lat <input id="latIn" type="number" step="0.0001" placeholder="40.7128" inputmode="decimal" /></label>
-        <label>Lon <input id="lonIn" type="number" step="0.0001" placeholder="-74.0060" inputmode="decimal" /></label>
-        <button class="btn btn-sm" id="applyManual">Use</button>
-      </div>
     </details>
 
     <footer class="footnote" id="footnote">
@@ -791,9 +781,6 @@ const els = {
   gateNote: $('gateNote'),
   footnote: $('footnote'),
   manual: $('manual'),
-  latIn: $('latIn'),
-  lonIn: $('lonIn'),
-  applyManual: $('applyManual'),
   cityIn: $('cityIn'),
   cityList: $('cityList'),
   applyCity: $('applyCity'),
@@ -967,7 +954,7 @@ function setLocation(lat, lon, label) {
 
 function requestGeolocation() {
   if (!('geolocation' in navigator)) {
-    toast('Geolocation unavailable — set your location manually below.');
+    toast('Geolocation unavailable — enter a city below.');
     els.manual.open = true;
     return;
   }
@@ -987,8 +974,8 @@ function requestGeolocation() {
       els.manual.open = true;
       toast(
         err.code === err.PERMISSION_DENIED
-          ? 'Location permission denied — enter it manually below.'
-          : 'Could not get location — enter it manually below.'
+          ? 'Location permission denied — enter a city below.'
+          : 'Could not get location — enter a city below.'
       );
     },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
@@ -1091,7 +1078,7 @@ function maybeHideGate() {
 function applyCity() {
   const city = findCity(els.cityIn.value);
   if (!city) {
-    toast('City not found — try another, or enter lat/lon below.');
+    toast('City not found — try a nearby major city.');
     return;
   }
   setLocation(city.lat, city.lon, `📍 ${city.n}, ${city.c}`);
@@ -1112,19 +1099,6 @@ if (els.applyCity) {
     if (findCity(els.cityIn.value)) applyCity();
   });
 }
-
-els.applyManual.addEventListener('click', () => {
-  const lat = parseFloat(els.latIn.value);
-  const lon = parseFloat(els.lonIn.value);
-  if (Number.isNaN(lat) || Number.isNaN(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-    toast('Enter a valid latitude (−90…90) and longitude (−180…180).');
-    return;
-  }
-  setLocation(lat, lon, `📍 manual · ${lat.toFixed(3)}, ${lon.toFixed(3)}`);
-  // If the compass never started (e.g. desktop), try it now.
-  if (!state.headingReady) startCompass();
-  toast('Location set.');
-});
 
 // Keep countdown and heading feeling live.
 setInterval(updateCountdown, 1000 * 30);

@@ -152,7 +152,7 @@ try {
   // 6. No uncaught runtime errors throughout.
   check('no page/runtime errors', pageErrors.length === 0, pageErrors.join(' | ') || 'clean');
 
-  // 7. Manual-entry recompute path.
+  // 7. Recompute path when the location changes again.
   await page.evaluate(() => window.__campingSunrise.setLocation(51.5074, -0.1278, 'London'));
   const londonTime = (await page.textContent('#riseTime')).trim();
   check('London recompute works', /^\d{1,2}:\d{2}/.test(londonTime), londonTime);
