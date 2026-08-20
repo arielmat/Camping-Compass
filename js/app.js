@@ -8,6 +8,7 @@
  * and renders a live compass whose ☀ marker sits on the real sunrise bearing.
  */
 import { nextSunrise, toCardinal } from './solar.js';
+import { CITIES, findCity } from './cities.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,7 +17,7 @@ const els = {
   dial: $('dial'),
   ticks: $('ticks'),
   sunMarker: $('sunMarker'),
-  hubHeading: $('hubHeading'),
+  hubDir: $('hubDir'),
   alignHint: $('alignHint'),
   riseTime: $('riseTime'),
   riseDir: $('riseDir'),
@@ -31,12 +32,21 @@ const els = {
   latIn: $('latIn'),
   lonIn: $('lonIn'),
   applyManual: $('applyManual'),
+  cityIn: $('cityIn'),
+  cityList: $('cityList'),
+  applyCity: $('applyCity'),
 };
+
+// How strongly to smooth the compass (0–1): higher = snappier but jumpier.
+const HEADING_SMOOTH = 0.25;
 
 const state = {
   lat: null,
   lon: null,
-  heading: null, // degrees, 0 = north, clockwise
+  rawHeading: null, // latest raw magnetometer reading, deg
+  smHeading: null, // low-pass-filtered heading, deg
+  heading: null, // = smHeading, exposed for alignment maths
+  rot: 0, // continuous (unwrapped) dial rotation, deg
   sunrise: null, // { time, bearing, cardinal }
   headingReady: false,
   locReady: false,
@@ -123,25 +133,49 @@ function updateCountdown() {
   els.countdown.textContent = h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
 }
 
+// Smallest signed angle (deg) to rotate from `current` to `target`, in
+// [-180, 180]. This is the key to a jump-free compass: we always take the
+// short way round instead of snapping across the 359°→0° seam. The double
+// modulo keeps it correct even when target−current is a large negative value
+// (JS's % preserves the sign of the dividend, so a single mod isn't enough).
+function shortestDelta(target, current) {
+  return ((((target - current) % 360) + 540) % 360) - 180;
+}
+
 // Rotate the dial so the current heading sits at the top, and place the
 // sunrise marker at its true bearing within the dial.
 function updateMarker() {
   if (state.sunrise && state.sunrise.bearing != null) {
     els.sunMarker.style.setProperty('--rise', state.sunrise.bearing + 'deg');
   }
+  // Hub shows the (stable) sunrise direction rather than a twitchy heading.
+  els.hubDir.textContent =
+    state.sunrise && state.sunrise.cardinal ? state.sunrise.cardinal : '--';
 
-  if (state.heading == null) {
-    els.hubHeading.textContent = '--°';
-    return;
+  if (state.rawHeading == null) return;
+
+  // 1) Low-pass filter the noisy magnetometer reading (along the short path).
+  if (state.smHeading == null) {
+    state.smHeading = state.rawHeading;
+  } else {
+    state.smHeading =
+      (state.smHeading +
+        shortestDelta(state.rawHeading, state.smHeading) * HEADING_SMOOTH +
+        360) %
+      360;
   }
-  // Rotating the whole dial by -heading puts whatever the phone points at
-  // (the top needle) at the top of the compass.
-  els.dial.style.transform = `rotate(${-state.heading}deg)`;
-  els.hubHeading.textContent = `${Math.round(state.heading)}°`;
+  state.heading = state.smHeading;
+
+  // 2) Accumulate a continuous, unwrapped rotation. Because we only ever add
+  // small short-path deltas, the dial never spins the long way round.
+  const target = -state.smHeading;
+  const curNorm = ((state.rot % 360) + 360) % 360;
+  state.rot += shortestDelta(target, curNorm);
+  els.dial.style.transform = `rotate(${state.rot}deg)`;
 
   // Alignment feedback: are we facing the sunrise?
   if (state.sunrise && state.sunrise.bearing != null) {
-    let diff = Math.abs(((state.sunrise.bearing - state.heading + 540) % 360) - 180);
+    const diff = Math.abs(shortestDelta(state.sunrise.bearing, state.heading));
     const aligned = diff < 6;
     els.alignHint.classList.toggle('aligned', aligned);
     els.alignHint.textContent = aligned
@@ -154,7 +188,7 @@ function updateMarker() {
 
 function nudge(diff, s) {
   // Which way to turn to reach the sunrise bearing.
-  const delta = ((s.sunrise.bearing - s.heading + 540) % 360) - 180;
+  const delta = shortestDelta(s.sunrise.bearing, s.heading);
   return delta > 0 ? `right ${Math.round(Math.abs(delta))}°` : `left ${Math.round(Math.abs(delta))}°`;
 }
 
@@ -220,7 +254,7 @@ function onOrientation(e) {
   const scr = (screen.orientation && screen.orientation.angle) || window.orientation || 0;
   heading = (heading + scr + 360) % 360;
 
-  state.heading = heading;
+  state.rawHeading = heading;
   if (!state.headingReady) {
     state.headingReady = true;
     maybeHideGate();
@@ -271,15 +305,51 @@ function maybeHideGate() {
   if (state.locReady) {
     els.gate.classList.add('hidden');
   }
-  if (state.locReady && state.heading == null) {
+  if (state.locReady && state.rawHeading == null) {
     els.footnote.textContent = 'Location set · point your phone to read the heading';
   } else {
     els.footnote.textContent = DEFAULT_FOOTNOTE;
   }
 }
 
+// ---------------------------------------------------------------- city list
+// Populate the <datalist> so the city box autocompletes as you type. Kept as
+// a bundled table so it works fully offline — no geocoding service needed.
+(function buildCityList() {
+  if (!els.cityList) return;
+  const frag = document.createDocumentFragment();
+  for (const c of CITIES) {
+    const opt = document.createElement('option');
+    opt.value = `${c.n}, ${c.c}`;
+    frag.appendChild(opt);
+  }
+  els.cityList.appendChild(frag);
+})();
+
+function applyCity() {
+  const city = findCity(els.cityIn.value);
+  if (!city) {
+    toast('City not found — try another, or enter lat/lon below.');
+    return;
+  }
+  setLocation(city.lat, city.lon, `📍 ${city.n}, ${city.c}`);
+  if (!state.headingReady) startCompass();
+  toast(`Location set to ${city.n}.`);
+}
+
 // ---------------------------------------------------------------- wiring
 els.enableBtn.addEventListener('click', enableSensors);
+
+if (els.applyCity) {
+  els.applyCity.addEventListener('click', applyCity);
+  els.cityIn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') applyCity();
+  });
+  // Picking straight from the autocomplete dropdown applies immediately.
+  els.cityIn.addEventListener('change', () => {
+    if (findCity(els.cityIn.value)) applyCity();
+  });
+}
 
 els.applyManual.addEventListener('click', () => {
   const lat = parseFloat(els.latIn.value);

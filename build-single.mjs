@@ -13,18 +13,21 @@ const read = (p) => readFile(ROOT + p, 'utf8');
 
 const css = await read('css/styles.css');
 let solar = await read('js/solar.js');
+let cities = await read('js/cities.js');
 let app = await read('js/app.js');
 const svg = await read('icons/icon.svg');
 
-// Merge the two ES modules into one module scope: drop the cross-file
-// import, and turn `export function` into plain declarations.
+// Merge the ES modules into one module scope: drop the cross-file imports,
+// and turn `export function`/`export const` into plain declarations.
 solar = solar.replace(/export function/g, 'function');
+cities = cities.replace(/export function/g, 'function').replace(/export const/g, 'const');
 app = app
-  .replace(/^import\s+\{[^}]*\}\s+from\s+'\.\/solar\.js';\s*$/m, '')
+  // Strip any `import { ... } from './*.js';` line.
+  .replace(/^import\s+\{[^}]*\}\s+from\s+'\.\/[^']+';\s*$/gm, '')
   // The service worker can't register from file://; drop that block.
   .replace(/\/\/ Register the service worker[\s\S]*?\}\s*\n/, '');
 
-const script = `${solar}\n\n/* ---- app ---- */\n${app}`;
+const script = `${cities}\n\n/* ---- solar ---- */\n${solar}\n\n/* ---- app ---- */\n${app}`;
 const favicon = 'data:image/svg+xml;base64,' + Buffer.from(svg).toString('base64');
 
 const html = `<!DOCTYPE html>
@@ -72,8 +75,8 @@ ${css}
         </div>
         <div class="needle" aria-hidden="true"></div>
         <div class="hub">
-          <div class="hub-heading" id="hubHeading">--°</div>
-          <div class="hub-label">heading</div>
+          <div class="hub-heading" id="hubDir">--</div>
+          <div class="hub-label">sunrise</div>
         </div>
       </div>
       <p class="align-hint" id="alignHint">Turn until the ☀ reaches the top</p>
@@ -105,7 +108,15 @@ ${css}
     </div>
 
     <details class="manual" id="manual">
-      <summary>Set location manually</summary>
+      <summary>No GPS? Pick a city or enter coordinates</summary>
+      <div class="manual-row manual-city">
+        <label>City
+          <input id="cityIn" list="cityList" placeholder="e.g. Paris" autocomplete="off" autocapitalize="words" />
+        </label>
+        <button class="btn btn-sm" id="applyCity">Use city</button>
+      </div>
+      <datalist id="cityList"></datalist>
+      <div class="manual-or">or exact coordinates</div>
       <div class="manual-row">
         <label>Lat <input id="latIn" type="number" step="0.0001" placeholder="40.7128" inputmode="decimal" /></label>
         <label>Lon <input id="lonIn" type="number" step="0.0001" placeholder="-74.0060" inputmode="decimal" /></label>
