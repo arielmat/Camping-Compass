@@ -99,8 +99,10 @@ body {
 .dial {
   position: absolute; inset: 0;
   border-radius: 50%;
-  transition: transform 0.14s linear;
-  will-change: transform;
+  /* No CSS transition or will-change here on purpose: the heading is already
+     smoothed in JS (EMA), and promoting the dial to a persistent GPU layer
+     rasterises the cardinal letters/ticks once and then rotates that bitmap,
+     which looks blurry while turning. Painting each frame keeps it crisp. */
 }
 .ticks { position: absolute; inset: 0; }
 .tick {

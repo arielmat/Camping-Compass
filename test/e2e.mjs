@@ -73,7 +73,9 @@ page.on('console', (m) => { if (m.type() === 'error') pageErrors.push('console: 
 // without network (the real request is exercised on-device). 48 hourly samples
 // from "now" cover whichever sunrise time the app picks.
 await page.addInitScript(() => {
+  window.__wxFetches = 0;
   window.fetch = async () => {
+    window.__wxFetches++;
     const now = Math.floor(Date.now() / 1000);
     const time = [], temperature_2m = [], weather_code = [];
     for (let i = 0; i < 48; i++) {
@@ -109,6 +111,14 @@ try {
   check('weather shows an icon', wxIcon.length > 0 && wxIcon !== '🌡️', wxIcon);
   const wxLabel = (await page.textContent('#wxLabel')).trim();
   check('weather shows a condition label', /cloudy|clear|rain|snow|fog|overcast|drizzle|thunder|showers/i.test(wxLabel), wxLabel);
+
+  // 2b. A tiny GPS jitter must NOT refetch the weather (no constant reloading).
+  const fetchesBefore = await page.evaluate(() => window.__wxFetches);
+  await page.evaluate(() => window.__campingSunrise.setLocation(40.7130, -74.0063)); // ~30 m
+  await page.waitForTimeout(150);
+  const fetchesAfter = await page.evaluate(() => window.__wxFetches);
+  const stillLabel = (await page.textContent('#wxLabel')).trim();
+  check('GPS jitter does not reload weather', fetchesAfter === fetchesBefore && stillLabel !== 'checking sky…', `${fetchesBefore}→${fetchesAfter}, "${stillLabel}"`);
 
   // 3. The sunrise marker should be positioned at the real bearing.
   const riseVar = await page.evaluate(() =>
