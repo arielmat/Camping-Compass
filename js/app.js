@@ -145,14 +145,45 @@ function setWeather(info) {
   }
 }
 
-async function loadWeather() {
+// Cached forecast so we don't refetch on every GPS tick / periodic recompute.
+const wxCache = { at: 0, lat: null, lon: null, data: null };
+const WX_MAX_AGE = 15 * 60 * 1000; // refresh a forecast at most every 15 min
+const WX_MOVE_DEG = 0.05; // ~5 km — refetch only after a real move
+
+async function loadWeather(force = false) {
   const s = state.sunrise;
   if (!s || !s.time || state.lat == null) return;
+
+  const moved =
+    wxCache.lat == null ||
+    Math.abs(state.lat - wxCache.lat) > WX_MOVE_DEG ||
+    Math.abs(state.lon - wxCache.lon) > WX_MOVE_DEG;
+  const stale = Date.now() - wxCache.at > WX_MAX_AGE;
+
+  // Nothing changed enough to warrant a network call — just re-render what we
+  // have (prevents the card flickering to "checking sky…" on every GPS update).
+  if (!force && !moved && !stale && wxCache.data) {
+    setWeather(wxCache.data);
+    return;
+  }
+
   const id = ++weatherReqId;
-  setWeather('loading');
+  // Only show the loading state when we have nothing to display yet; background
+  // refreshes update silently.
+  if (!wxCache.data || moved) setWeather('loading');
+
   const info = await fetchSunriseWeather(state.lat, state.lon, s.time);
   if (id !== weatherReqId) return; // a newer request superseded this one
-  setWeather(info || 'offline');
+
+  if (info) {
+    wxCache.at = Date.now();
+    wxCache.lat = state.lat;
+    wxCache.lon = state.lon;
+    wxCache.data = info;
+    setWeather(info);
+  } else if (!wxCache.data) {
+    setWeather('offline');
+  } // else: refresh failed but keep showing the last good reading
 }
 
 // Smallest signed angle (deg) to rotate from `current` to `target`, in
@@ -216,6 +247,15 @@ function nudge(diff, s) {
 
 // ---------------------------------------------------------------- location
 function setLocation(lat, lon, label) {
+  // Ignore GPS jitter: watchPosition can fire repeatedly with essentially the
+  // same fix, and recomputing on each one made the weather card churn.
+  const negligible =
+    state.locReady &&
+    !label &&
+    Math.abs(lat - state.lat) < 1e-3 && // ~100 m
+    Math.abs(lon - state.lon) < 1e-3;
+  if (negligible) return;
+
   state.lat = lat;
   state.lon = lon;
   state.locReady = true;
