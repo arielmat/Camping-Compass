@@ -69,6 +69,22 @@ const pageErrors = [];
 page.on('pageerror', (e) => pageErrors.push(String(e)));
 page.on('console', (m) => { if (m.type() === 'error') pageErrors.push('console: ' + m.text()); });
 
+// Stub the Open-Meteo fetch so the weather card resolves deterministically
+// without network (the real request is exercised on-device). 48 hourly samples
+// from "now" cover whichever sunrise time the app picks.
+await page.addInitScript(() => {
+  window.fetch = async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const time = [], temperature_2m = [], weather_code = [];
+    for (let i = 0; i < 48; i++) {
+      time.push(now + i * 3600);
+      temperature_2m.push(15);
+      weather_code.push(2); // partly cloudy
+    }
+    return { ok: true, json: async () => ({ hourly: { time, temperature_2m, weather_code } }) };
+  };
+});
+
 try {
   await page.goto(`${base}/index.html`, { waitUntil: 'load' });
   await page.waitForFunction(() => window.__campingSunrise, { timeout: 5000 });
@@ -79,16 +95,22 @@ try {
   const riseTime = await page.textContent('#riseTime');
   check('sunrise time renders as HH:MM', /^\d{1,2}:\d{2}/.test(riseTime.trim()), riseTime);
 
-  const riseDir = (await page.textContent('#riseDir')).trim();
-  check('sunrise direction is a compass point', /^[NESW]{1,3}$/.test(riseDir), riseDir);
+  const riseDay = (await page.textContent('#riseDayKey')).trim();
+  check('sunrise day label renders', /^sunrise ·/.test(riseDay), riseDay);
 
-  const bearing = await page.textContent('#riseBearing');
-  check('bearing shows degrees + day label', /\d+°/.test(bearing), bearing);
+  // 2. Weather-at-sunrise card resolves to an icon + °C temperature.
+  await page.waitForFunction(
+    () => /°C/.test(document.getElementById('wxTemp').textContent),
+    { timeout: 4000 }
+  );
+  const wxTemp = (await page.textContent('#wxTemp')).trim();
+  check('weather shows temperature in °C', /^-?\d+°C$/.test(wxTemp), wxTemp);
+  const wxIcon = (await page.textContent('#wxIcon')).trim();
+  check('weather shows an icon', wxIcon.length > 0 && wxIcon !== '🌡️', wxIcon);
+  const wxLabel = (await page.textContent('#wxLabel')).trim();
+  check('weather shows a condition label', /cloudy|clear|rain|snow|fog|overcast|drizzle|thunder|showers/i.test(wxLabel), wxLabel);
 
-  const countdown = (await page.textContent('#countdown')).trim();
-  check('countdown renders', /(\d+h\s*)?\d+m|—/.test(countdown), countdown);
-
-  // 2. The sunrise marker should be positioned at the real bearing.
+  // 3. The sunrise marker should be positioned at the real bearing.
   const riseVar = await page.evaluate(() =>
     getComputedStyle(document.getElementById('sunMarker')).getPropertyValue('--rise'));
   check('sun marker has a bearing set', /\d/.test(riseVar), riseVar.trim());
@@ -134,10 +156,10 @@ try {
   // Each 5° step should move the dial only a few degrees — never a ~360 snap.
   check('dial never jumps across the 0°/360° seam', maxStep < 20, `max step ${maxStep.toFixed(1)}°`);
 
-  // 4. Southern hemisphere sanity: Sydney in local winter rises north-of-east.
+  // 4. Southern hemisphere sanity: the hub shows a valid sunrise direction.
   await page.evaluate(() => window.__campingSunrise.setLocation(-33.8688, 151.2093, 'Sydney'));
-  const sydDir = (await page.textContent('#riseDir')).trim();
-  check('Sydney direction renders', /^[NESW]{1,3}$/.test(sydDir), sydDir);
+  const sydDir = (await page.textContent('#hubDir')).trim();
+  check('Sydney sunrise direction renders in hub', /^[NESW]{1,3}$/.test(sydDir), sydDir);
 
   // 5. City fallback: resolve a city by name and apply it.
   await page.evaluate(() => { document.getElementById('manual').open = true; });

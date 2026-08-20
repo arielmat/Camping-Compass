@@ -182,17 +182,21 @@ body {
 .align-hint.aligned { color: var(--sun); font-weight: 600; }
 
 /* ---------- readouts ---------- */
-.readouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.readouts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .readout {
   background: var(--card); border: 1px solid var(--card-line);
-  border-radius: var(--radius); padding: 14px 8px; text-align: center;
+  border-radius: var(--radius); padding: 16px 10px; text-align: center;
   backdrop-filter: blur(8px);
 }
 .readout-value {
-  font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums;
   color: var(--ink); line-height: 1.1;
 }
-#riseDir { color: var(--sun); }
+.weather-value { display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+.weather-value #wxIcon { font-size: 1.5rem; line-height: 1; }
+.weather-value #wxTemp { color: var(--sun); }
+.weather-value.loading #wxIcon { animation: wxpulse 1.4s ease-in-out infinite; }
+@keyframes wxpulse { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
 .readout-key {
   font-size: 0.66rem; letter-spacing: 1px; text-transform: uppercase;
   color: var(--ink-faint); margin-top: 6px;

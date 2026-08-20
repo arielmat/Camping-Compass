@@ -9,6 +9,7 @@
  */
 import { nextSunrise, toCardinal } from './solar.js';
 import { CITIES, findCity } from './cities.js';
+import { fetchSunriseWeather } from './weather.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -20,9 +21,10 @@ const els = {
   hubDir: $('hubDir'),
   alignHint: $('alignHint'),
   riseTime: $('riseTime'),
-  riseDir: $('riseDir'),
-  riseBearing: $('riseBearing'),
-  countdown: $('countdown'),
+  riseDayKey: $('riseDayKey'),
+  wxIcon: $('wxIcon'),
+  wxTemp: $('wxTemp'),
+  wxLabel: $('wxLabel'),
   place: $('place'),
   gate: $('gate'),
   enableBtn: $('enableBtn'),
@@ -98,36 +100,59 @@ function computeSunrise() {
 
   if (!r.time) {
     els.riseTime.textContent = r.polarDay ? '24h sun' : 'polar';
-    els.riseDir.textContent = '—';
-    els.riseBearing.textContent = r.polarDay ? 'midnight sun' : 'polar night';
-    els.countdown.textContent = '—';
+    els.riseDayKey.textContent = r.polarDay ? 'midnight sun' : 'polar night';
+    setWeather(null);
     els.alignHint.textContent = r.polarDay
       ? 'The sun stays up all day here right now'
       : 'The sun stays below the horizon here right now';
     els.sunMarker.style.opacity = '0';
+    updateMarker();
     return;
   }
 
   els.sunMarker.style.opacity = '1';
   els.riseTime.textContent = fmtTime(r.time);
-  els.riseDir.textContent = r.cardinal;
-  els.riseBearing.textContent = `${Math.round(r.bearing)}° · ${fmtDayLabel(r.time)}`;
+  els.riseDayKey.textContent = `sunrise · ${fmtDayLabel(r.time)}`;
   updateMarker();
-  updateCountdown();
+  loadWeather();
 }
 
-function updateCountdown() {
-  if (!state.sunrise || !state.sunrise.time) return;
-  const ms = state.sunrise.time.getTime() - Date.now();
-  if (ms <= 0) {
-    // Sunrise just passed — advance to the following one.
-    computeSunrise();
-    return;
+// ---------------------------------------------------------------- weather
+let weatherReqId = 0;
+
+// Render the weather card. `info` = {icon,label,tempC}, or a status string
+// ('loading' | 'offline'), or null to reset.
+function setWeather(info) {
+  const box = els.wxIcon.closest('.weather-value');
+  box.classList.remove('loading');
+  if (info === 'loading') {
+    box.classList.add('loading');
+    els.wxIcon.textContent = '🌡️';
+    els.wxTemp.textContent = '';
+    els.wxLabel.textContent = 'checking sky…';
+  } else if (info === 'offline') {
+    els.wxIcon.textContent = '📡';
+    els.wxTemp.textContent = '–';
+    els.wxLabel.textContent = 'weather offline';
+  } else if (info && typeof info === 'object') {
+    els.wxIcon.textContent = info.icon;
+    els.wxTemp.textContent = `${Math.round(info.tempC)}°C`;
+    els.wxLabel.textContent = info.label;
+  } else {
+    els.wxIcon.textContent = '🌡️';
+    els.wxTemp.textContent = '–';
+    els.wxLabel.textContent = 'at sunrise';
   }
-  const totalMin = Math.floor(ms / 60000);
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  els.countdown.textContent = h > 0 ? `${h}h ${String(m).padStart(2, '0')}m` : `${m}m`;
+}
+
+async function loadWeather() {
+  const s = state.sunrise;
+  if (!s || !s.time || state.lat == null) return;
+  const id = ++weatherReqId;
+  setWeather('loading');
+  const info = await fetchSunriseWeather(state.lat, state.lon, s.time);
+  if (id !== weatherReqId) return; // a newer request superseded this one
+  setWeather(info || 'offline');
 }
 
 // Smallest signed angle (deg) to rotate from `current` to `target`, in
@@ -349,8 +374,9 @@ if (els.applyCity) {
 }
 
 // Keep countdown and heading feeling live.
-setInterval(updateCountdown, 1000 * 30);
-setInterval(computeSunrise, 1000 * 60 * 5); // refresh math periodically
+// Refresh sunrise time, day label and weather periodically (also rolls over to
+// the next morning once a sunrise passes).
+setInterval(computeSunrise, 1000 * 60 * 5);
 
 // On non-iOS (no permission prompt needed) we can start the compass eagerly,
 // but geolocation still needs the button tap on most browsers, so the gate
