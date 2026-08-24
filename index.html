@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#1a1026" />
-  <title>Potty Playa · Decorated Porta-Potties of Burning Man</title>
-  <meta name="description" content="A community for Burning Man burners who adopt, decorate and care for porta-potties on the playa. Browse builds, rate them, share your own — and leave no trace." />
+  <meta name="theme-color" content="#ecdcb8" />
+  <title>The Adopt a Porta-Potty initiative</title>
+  <meta name="description" content="Adopt, decorate and care for Burning Man porta-potties. Browse builds, rate them, share your own — and leave no trace." />
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -14,7 +14,7 @@
 <body>
   <header class="site-header">
     <nav class="nav">
-      <a class="brand" href="index.html"><span class="disco"></span>Potty&nbsp;Playa</a>
+      <a class="brand" href="index.html"><span class="disco"></span>The&nbsp;Adopt&nbsp;a&nbsp;Porta-Potty&nbsp;initiative</a>
       <button class="nav-toggle" aria-label="Menu">☰</button>
       <div class="nav-links">
         <a href="index.html">Home</a>
@@ -22,6 +22,7 @@
         <a href="guidelines.html">Guidelines</a>
         <a href="contact.html">Contact</a>
       </div>
+      <div class="account" id="account"></div>
     </nav>
   </header>
 
@@ -43,12 +44,11 @@
 
   <section class="block">
     <div class="wrap">
-      <h2 class="section-title">What is Potty Playa?</h2>
+      <h2 class="section-title">What is this?</h2>
       <p class="section-sub">
-        Part of the spirit of the <strong>Adopt-a-Porta-Potty</strong> initiative:
-        camps and crews claim a bank of porta-potties, decorate them with love, and
-        become their stewards for the burn. This is where those builds live, get
-        celebrated, and inspire the next one.
+        <strong>The Adopt a Porta-Potty initiative</strong>: camps and crews claim a bank
+        of porta-potties, decorate them with love, and become their stewards for the burn.
+        This is where those builds live, get celebrated, and inspire the next one.
       </p>
       <div class="grid cols-3">
         <div class="card feature">
@@ -94,29 +94,36 @@
 
   <footer class="site-footer">
     <div class="wrap">
-      <div class="brand" style="display:inline-flex"><span class="disco"></span>Potty&nbsp;Playa</div>
-      <p>Made with dust and love for the Adopt-a-Porta-Potty initiative.<br>
+      <div class="brand" style="display:inline-flex"><span class="disco"></span>The Adopt a Porta-Potty initiative</div>
+      <p>Made with dust and love on the playa.<br>
         Questions? <a href="contact.html">Get in touch</a>. Not affiliated with Burning Man Project.</p>
     </div>
   </footer>
 
   <script type="module">
-    import { Store } from "./js/store.js";
+    import { API } from "./js/api.js";
     import { initNav, starsHtml, esc } from "./js/ui.js";
+    import { initAuth } from "./js/auth.js";
     initNav();
+    initAuth();
     const wrap = document.getElementById("featured");
-    const top = Store.all().sort((a, b) => Store.avg(b) - Store.avg(a)).slice(0, 2);
-    wrap.innerHTML = top.map((p) => `
-      <a class="card project-card" href="gallery.html" style="text-decoration:none;color:inherit">
-        <div class="thumb"><img src="${esc(p.image)}" alt="${esc(p.title)}"></div>
-        <div class="card-body">
-          <h3>${esc(p.title)}</h3>
-          <div class="camp">${esc(p.camp)}</div>
-          <div class="meta"><span class="rating-line">${starsHtml(Store.avg(p))}
-            <span class="count">${Store.avg(p).toFixed(1)}</span></span>
-            <span class="count">💬 ${p.comments.length}</span></div>
-        </div>
-      </a>`).join("");
+    try {
+      const { projects } = await API.list();
+      const top = projects.sort((a, b) => b.avg - a.avg).slice(0, 2);
+      wrap.innerHTML = top.map((p) => `
+        <a class="card project-card" href="gallery.html" style="text-decoration:none;color:inherit">
+          <div class="thumb"><img src="${esc(p.image)}" alt="${esc(p.title)}"></div>
+          <div class="card-body">
+            <h3>${esc(p.title)}</h3>
+            <div class="camp">${esc(p.camp)}</div>
+            <div class="meta"><span class="rating-line">${starsHtml(p.avg)}
+              <span class="count">${p.avg.toFixed(1)}</span></span>
+              <span class="count">💬 ${p.commentCount}</span></div>
+          </div>
+        </a>`).join("");
+    } catch (_) {
+      wrap.innerHTML = '<div class="empty">Start the server to see featured builds.</div>';
+    }
   </script>
 </body>
 </html>

@@ -1,10 +1,11 @@
 {
-  "name": "potty-playa",
-  "version": "1.0.0",
-  "description": "A community site for burners who adopt, decorate and care for Burning Man porta-potties.",
+  "name": "adopt-a-porta-potty",
+  "version": "2.0.0",
+  "description": "The Adopt a Porta-Potty initiative — a community site for burners who adopt, decorate and care for Burning Man porta-potties.",
   "type": "module",
+  "engines": { "node": ">=22.5" },
   "scripts": {
-    "start": "node server.mjs"
+    "start": "node --no-warnings server.mjs"
   },
   "keywords": ["burningman", "porta-potty", "art", "community", "playa"],
   "license": "MIT"

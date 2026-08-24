@@ -1,34 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Potty Playa disco ball">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Playa sun">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="35%" r="75%">
-      <stop offset="0%" stop-color="#3a2450"/>
-      <stop offset="100%" stop-color="#1a1026"/>
-    </radialGradient>
-    <radialGradient id="ball" cx="35%" cy="30%" r="75%">
-      <stop offset="0%" stop-color="#ffffff"/>
-      <stop offset="35%" stop-color="#c9b6df"/>
-      <stop offset="100%" stop-color="#6d4c9a"/>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f3e2bc"/>
+      <stop offset="100%" stop-color="#e6c98f"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fff3d6"/>
+      <stop offset="45%" stop-color="#d7a53f"/>
+      <stop offset="75%" stop-color="#e08a3c"/>
+      <stop offset="100%" stop-color="#c05f3c"/>
     </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-  <!-- rays -->
-  <g stroke-linecap="round" opacity="0.8">
-    <line x1="256" y1="70" x2="256" y2="150" stroke="#ffb23e" stroke-width="14"/>
-    <line x1="120" y1="120" x2="175" y2="175" stroke="#ff4fa3" stroke-width="12"/>
-    <line x1="392" y1="120" x2="337" y2="175" stroke="#37d6e0" stroke-width="12"/>
-    <line x1="70" y1="256" x2="150" y2="256" stroke="#a06bff" stroke-width="12"/>
-    <line x1="442" y1="256" x2="362" y2="256" stroke="#ff7a3c" stroke-width="12"/>
+  <rect width="512" height="512" rx="96" fill="url(#sky)"/>
+  <!-- sun rays -->
+  <g stroke="#e08a3c" stroke-width="16" stroke-linecap="round" opacity="0.85">
+    <line x1="256" y1="60" x2="256" y2="120"/>
+    <line x1="140" y1="110" x2="178" y2="158"/>
+    <line x1="372" y1="110" x2="334" y2="158"/>
+    <line x1="86" y1="228" x2="146" y2="238"/>
+    <line x1="426" y1="228" x2="366" y2="238"/>
   </g>
-  <!-- disco ball -->
-  <circle cx="256" cy="272" r="120" fill="url(#ball)" stroke="#2c1b3d" stroke-width="4"/>
-  <g stroke="#2c1b3d" stroke-width="3" opacity="0.55">
-    <line x1="136" y1="272" x2="376" y2="272"/>
-    <line x1="150" y1="212" x2="362" y2="212"/>
-    <line x1="150" y1="332" x2="362" y2="332"/>
-    <line x1="256" y1="152" x2="256" y2="392"/>
-    <line x1="200" y1="160" x2="200" y2="384"/>
-    <line x1="312" y1="160" x2="312" y2="384"/>
-  </g>
-  <!-- hang -->
-  <line x1="256" y1="150" x2="256" y2="120" stroke="#c9b6df" stroke-width="6"/>
+  <!-- sun -->
+  <circle cx="256" cy="236" r="98" fill="url(#sun)"/>
+  <!-- playa dune horizon -->
+  <path d="M0 360 Q 128 322 256 352 T 512 356 L512 512 L0 512 Z" fill="#c99a55"/>
+  <path d="M0 402 Q 160 368 320 398 T 512 404 L512 512 L0 512 Z" fill="#b5843f"/>
 </svg>
