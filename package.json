@@ -1,18 +1,11 @@
 {
-  "name": "camping-sunrise",
+  "name": "potty-playa",
   "version": "1.0.0",
-  "description": "Point your phone and find exactly where and when the sun will rise tomorrow morning.",
+  "description": "A community site for burners who adopt, decorate and care for Burning Man porta-potties.",
   "type": "module",
   "scripts": {
-    "start": "node server.mjs",
-    "test": "node --test test/solar.test.mjs test/weather.test.mjs",
-    "test:e2e": "node test/e2e.mjs",
-    "test:all": "node --test test/solar.test.mjs test/weather.test.mjs && node test/e2e.mjs"
+    "start": "node server.mjs"
   },
-  "keywords": ["sunrise", "compass", "camping", "pwa", "astronomy"],
-  "license": "MIT",
-  "devDependencies": {
-    "playwright": "^1.0.0",
-    "sharp": "^0.33.0"
-  }
+  "keywords": ["burningman", "porta-potty", "art", "community", "playa"],
+  "license": "MIT"
 }

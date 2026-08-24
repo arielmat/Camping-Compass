@@ -1,8 +1,6 @@
 /*
  * server.mjs — tiny zero-dependency static file server for local use.
  *   npm start   →   http://localhost:8080
- * Serve over HTTPS (or localhost) so geolocation and the device compass work;
- * browsers only expose those sensors in a secure context.
  */
 import { createServer } from 'node:http';
 import { readFile, stat } from 'node:fs/promises';
@@ -21,6 +19,9 @@ const TYPES = {
   '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.ico': 'image/x-icon',
 };
 
@@ -48,5 +49,5 @@ const server = createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`Camping Sunrise → http://localhost:${PORT}`);
+  console.log(`Potty Playa → http://localhost:${PORT}`);
 });

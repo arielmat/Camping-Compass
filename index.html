@@ -2,101 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#0b1026" />
-  <title>Camping Sunrise</title>
-  <meta name="description" content="Point your phone and find exactly where and when the sun will rise tomorrow morning." />
-
-  <!-- iOS home-screen app -->
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Camping Sunrise" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1026" />
+  <title>Potty Playa · Decorated Porta-Potties of Burning Man</title>
+  <meta name="description" content="A community for Burning Man burners who adopt, decorate and care for porta-potties on the playa. Browse builds, rate them, share your own — and leave no trace." />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
-  <div class="sky" aria-hidden="true">
-    <div class="stars"></div>
-    <div class="glow"></div>
-  </div>
-
-  <main class="app">
-    <header class="topbar">
-      <h1 class="wordmark"><span class="sun-dot"></span>Camping&nbsp;Sunrise</h1>
-      <p class="tagline">Where &amp; when the sun breaks the horizon</p>
-    </header>
-
-    <!-- Compass -->
-    <section class="compass-stage" aria-label="Sunrise compass">
-      <div class="compass" id="compass">
-        <!-- The rotating dial (cardinal ring + ticks) -->
-        <div class="dial" id="dial">
-          <div class="ticks" id="ticks"></div>
-          <span class="card card-n">N</span>
-          <span class="card card-e">E</span>
-          <span class="card card-s">S</span>
-          <span class="card card-w">W</span>
-          <!-- Sunrise marker, rotated to the sunrise bearing within the dial -->
-          <div class="sun-marker" id="sunMarker">
-            <div class="sun-ray"></div>
-            <div class="sun-icon">☀</div>
-          </div>
-        </div>
-        <!-- Fixed pointer at the top: the direction the phone faces -->
-        <div class="needle" aria-hidden="true"></div>
-        <div class="hub">
-          <div class="hub-heading" id="hubDir">--</div>
-          <div class="hub-label">sunrise</div>
-        </div>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="index.html"><span class="disco"></span>Potty&nbsp;Playa</a>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="gallery.html">Gallery</a>
+        <a href="guidelines.html">Guidelines</a>
+        <a href="contact.html">Contact</a>
       </div>
-      <p class="align-hint" id="alignHint">Turn until the ☀ reaches the top</p>
-    </section>
+    </nav>
+  </header>
 
-    <!-- Readouts -->
-    <section class="readouts">
-      <div class="readout">
-        <div class="readout-value" id="riseTime">--:--</div>
-        <div class="readout-key" id="riseDayKey">sunrise</div>
-      </div>
-      <div class="readout">
-        <div class="readout-value weather-value">
-          <span id="wxIcon">🌡️</span><span id="wxTemp">–</span>
-        </div>
-        <div class="readout-key" id="wxLabel">at sunrise</div>
-      </div>
-    </section>
-
-    <p class="place" id="place">Locating you…</p>
-
-    <!-- Permission / status gate -->
-    <div class="gate" id="gate">
-      <button class="btn" id="enableBtn">Enable location &amp; compass</button>
-      <p class="gate-note" id="gateNote">
-        Camping Sunrise needs your location and the device compass. Nothing
-        leaves your phone — all calculations run on‑device.
+  <section class="hero">
+    <div class="hero-disco" aria-hidden="true"></div>
+    <div class="wrap">
+      <h1>Adopt a Porta-Potty.<br>Make it Magic.</h1>
+      <p class="lead">
+        A home on the playa for burners who transform the humblest box in the desert
+        into art — and keep it clean, sparkling and MOOP-free all week long.
       </p>
-    </div>
-
-    <!-- Manual location fallback -->
-    <details class="manual" id="manual">
-      <summary>No GPS? Enter a city</summary>
-      <div class="manual-row manual-city">
-        <label>City
-          <input id="cityIn" list="cityList" placeholder="e.g. Paris" autocomplete="off" autocapitalize="words" />
-        </label>
-        <button class="btn btn-sm" id="applyCity">Use city</button>
+      <div class="btn-row">
+        <a class="btn" href="gallery.html">Explore the gallery</a>
+        <a class="btn disco" href="gallery.html#upload">Share your build</a>
+        <a class="btn secondary" href="guidelines.html">Read the guidelines</a>
       </div>
-      <datalist id="cityList"></datalist>
-    </details>
+    </div>
+  </section>
 
-    <footer class="footnote" id="footnote">
-      On‑device astronomy · no tracking
-    </footer>
-  </main>
+  <section class="block">
+    <div class="wrap">
+      <h2 class="section-title">What is Potty Playa?</h2>
+      <p class="section-sub">
+        Part of the spirit of the <strong>Adopt-a-Porta-Potty</strong> initiative:
+        camps and crews claim a bank of porta-potties, decorate them with love, and
+        become their stewards for the burn. This is where those builds live, get
+        celebrated, and inspire the next one.
+      </p>
+      <div class="grid cols-3">
+        <div class="card feature">
+          <span class="emoji">🎨</span>
+          <h3>Decorate</h3>
+          <p>Turn a plastic box into a disco, a jungle, a spa or a gallery. Bring joy to a 3am playa walk.</p>
+        </div>
+        <div class="card feature">
+          <span class="emoji">🧹</span>
+          <h3>Care for it</h3>
+          <p>Adoption means stewardship — keep it stocked, tidy and shining, and leave no trace when the burn ends.</p>
+        </div>
+        <div class="card feature">
+          <span class="emoji">⭐</span>
+          <h3>Celebrate</h3>
+          <p>Post photos, rate each other's builds, swap tips in the comments, and grow the tradition.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <script type="module" src="js/app.js"></script>
+  <section class="block">
+    <div class="wrap">
+      <h2 class="section-title">Featured builds</h2>
+      <p class="section-sub">A taste of what the community has created. See them all in the gallery.</p>
+      <div class="grid cols-2" id="featured"></div>
+      <div class="btn-row" style="margin-top:28px">
+        <a class="btn" href="gallery.html">See the full gallery</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="block">
+    <div class="wrap">
+      <div class="callout">
+        <strong>New to adopting a potty?</strong> Start with the
+        <a href="guidelines.html">community guidelines</a> — what's encouraged, what's
+        off-limits, and how to decorate safely while honoring Leave No Trace and the
+        BLM rules that keep the whole event possible.
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="brand" style="display:inline-flex"><span class="disco"></span>Potty&nbsp;Playa</div>
+      <p>Made with dust and love for the Adopt-a-Porta-Potty initiative.<br>
+        Questions? <a href="contact.html">Get in touch</a>. Not affiliated with Burning Man Project.</p>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { Store } from "./js/store.js";
+    import { initNav, starsHtml, esc } from "./js/ui.js";
+    initNav();
+    const wrap = document.getElementById("featured");
+    const top = Store.all().sort((a, b) => Store.avg(b) - Store.avg(a)).slice(0, 2);
+    wrap.innerHTML = top.map((p) => `
+      <a class="card project-card" href="gallery.html" style="text-decoration:none;color:inherit">
+        <div class="thumb"><img src="${esc(p.image)}" alt="${esc(p.title)}"></div>
+        <div class="card-body">
+          <h3>${esc(p.title)}</h3>
+          <div class="camp">${esc(p.camp)}</div>
+          <div class="meta"><span class="rating-line">${starsHtml(Store.avg(p))}
+            <span class="count">${Store.avg(p).toFixed(1)}</span></span>
+            <span class="count">💬 ${p.comments.length}</span></div>
+        </div>
+      </a>`).join("");
+  </script>
 </body>
 </html>

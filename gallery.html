@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1026" />
+  <title>Gallery · Potty Playa</title>
+  <meta name="description" content="Browse decorated Burning Man porta-potties, rate them, leave comments, and upload your own build to the community gallery." />
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav">
+      <a class="brand" href="index.html"><span class="disco"></span>Potty&nbsp;Playa</a>
+      <button class="nav-toggle" aria-label="Menu">☰</button>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="gallery.html">Gallery</a>
+        <a href="guidelines.html">Guidelines</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </nav>
+  </header>
+
+  <section class="block" id="gallery">
+    <div class="wrap">
+      <h1 class="section-title">The Gallery</h1>
+      <p class="section-sub">
+        Every decorated, adopted and lovingly-tended potty on the playa. Tap a card to
+        rate it and leave a comment.
+      </p>
+
+      <div class="gallery-controls">
+        <div class="filters" id="filters">
+          <button class="chip active" data-theme="all">All</button>
+          <button class="chip" data-theme="disco">Disco</button>
+          <button class="chip" data-theme="jungle">Jungle</button>
+          <button class="chip" data-theme="playa">Playa Art</button>
+          <button class="chip" data-theme="neon">Neon</button>
+          <button class="chip" data-theme="spa">Spa &amp; Zen</button>
+          <button class="chip" data-theme="other">Other</button>
+        </div>
+        <select class="sort" id="sort" aria-label="Sort">
+          <option value="newest">Newest first</option>
+          <option value="top">Top rated</option>
+          <option value="discussed">Most discussed</option>
+        </select>
+      </div>
+
+      <div class="grid cols-3" id="grid"></div>
+    </div>
+  </section>
+
+  <section class="block" id="upload">
+    <div class="wrap">
+      <h2 class="section-title">Share your build</h2>
+      <p class="section-sub">
+        Decorated a potty? Add it to the gallery. Photos and details are saved in your
+        own browser on this device — see the note below.
+      </p>
+
+      <form class="form-grid" id="uploadForm">
+        <div class="image-drop" id="imageDrop">
+          <div class="drop-hint">Tap or drop a photo here</div>
+          <input type="file" id="imageFile" accept="image/*" hidden>
+        </div>
+
+        <label class="field">Title <span class="req">*</span>
+          <input type="text" name="title" placeholder="e.g. The Porta-Disco" maxlength="80" required>
+        </label>
+
+        <label class="field">Camp / crew
+          <input type="text" name="camp" placeholder="e.g. Comfort &amp; Joy — 7E" maxlength="80">
+        </label>
+
+        <label class="field">Decorated by
+          <input type="text" name="artists" placeholder="Your playa name(s)" maxlength="80">
+        </label>
+
+        <label class="field">Theme
+          <select name="theme">
+            <option value="disco">Disco</option>
+            <option value="jungle">Jungle</option>
+            <option value="playa">Playa Art</option>
+            <option value="neon">Neon</option>
+            <option value="spa">Spa &amp; Zen</option>
+            <option value="other" selected>Other</option>
+          </select>
+        </label>
+
+        <label class="field">Year
+          <input type="text" name="year" inputmode="numeric" placeholder="2025" maxlength="4">
+        </label>
+
+        <label class="field">Description
+          <textarea name="desc" placeholder="Tell us about your build, the materials, and how you keep it clean…" maxlength="800"></textarea>
+        </label>
+
+        <div class="form-note">
+          🔒 This is a static community site with no server. Your upload is stored
+          locally in <em>this</em> browser so you can preview how it looks — it isn't
+          published to other visitors. To feature your build on the shared site, send
+          your photos via the <a href="contact.html">contact page</a>.
+        </div>
+
+        <div><button class="btn" type="submit">Add to gallery</button></div>
+      </form>
+    </div>
+  </section>
+
+  <!-- Project modal -->
+  <div class="modal-backdrop" id="modal" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <button class="modal-close" id="modalClose" aria-label="Close">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="brand" style="display:inline-flex"><span class="disco"></span>Potty&nbsp;Playa</div>
+      <p>Made with dust and love for the Adopt-a-Porta-Potty initiative.
+        <a href="contact.html">Contact</a></p>
+    </div>
+  </footer>
+
+  <script type="module" src="js/gallery.js"></script>
+</body>
+</html>
